@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter_internet_speed_test/src/speed_test_utils.dart';
 import 'package:flutter_internet_speed_test/src/test_result.dart';
 
@@ -12,7 +10,6 @@ typedef ResultCallback = void Function(TestResult download, TestResult upload);
 typedef TestProgressCallback = void Function(double percent, TestResult data);
 typedef ResultCompletionCallback = void Function(TestResult data);
 typedef DefaultServerSelectionCallback = void Function(Client? client);
-typedef LatencyCallback = void Function(int latencyMs);
 
 class FlutterInternetSpeedTest {
   static const _defaultDownloadTestServer =
@@ -32,22 +29,6 @@ class FlutterInternetSpeedTest {
 
   bool isTestInProgress() => _isTestInProgress;
 
-  Future<int> measureHttpLatency(String url) async {
-    final uri = Uri.parse(url);
-    final stopwatch = Stopwatch()..start();
-
-    try {
-      final request = await HttpClient().getUrl(uri);
-      final response = await request.close();
-      await response.drain(); // đọc hết body
-      stopwatch.stop();
-      return stopwatch.elapsedMilliseconds;
-    } catch (e) {
-      stopwatch.stop();
-      return -1; // lỗi đo latency
-    }
-  }
-
   Future<void> startTesting({
     required ResultCallback onCompleted,
     DefaultCallback? onStarted,
@@ -58,7 +39,6 @@ class FlutterInternetSpeedTest {
     DefaultServerSelectionCallback? onDefaultServerSelectionDone,
     ErrorCallback? onError,
     CancelCallback? onCancel,
-    LatencyCallback? onLatencyMeasured,  // <-- thêm callback mới
     String? downloadTestServer,
     String? uploadTestServer,
     int fileSizeInBytes = _defaultFileSize,
@@ -111,12 +91,6 @@ class FlutterInternetSpeedTest {
         _isCancelled = false;
         return;
       }
-    }
-
-    // *** Đo Latency ở đây ***
-    if (onLatencyMeasured != null) {
-      final latencyMs = await measureHttpLatency(downloadTestServer!);
-      onLatencyMeasured(latencyMs);
     }
 
     final startDownloadTimeStamp = DateTime.now().millisecondsSinceEpoch;
