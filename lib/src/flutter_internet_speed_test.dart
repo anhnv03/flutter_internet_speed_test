@@ -47,6 +47,9 @@ class FlutterInternetSpeedTest {
     if (_isTestInProgress) {
       return;
     }
+
+
+
     if (await isInternetAvailable() == false) {
       if (onError != null) {
         onError('No internet connection', 'No internet connection');
